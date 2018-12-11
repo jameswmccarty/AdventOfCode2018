@@ -184,8 +184,8 @@ def parse_pt(line):
 	return Point(int(x),int(y),int(dx),int(dy))
 	
 def draw_sky(w, h, points):
-	line = '-' * w
-	print line
+	#line = '-' * w
+	#print line
 	sky = [[" "] * w for i in range(h)]
 	for p in points:
 		if p.y >=0 and p.y < h and p.x >=0 and p.x < w:
@@ -201,6 +201,23 @@ def img_sky(w,h,points):
 		if p.x >=0 and p.x < w and p.y >=0 and p.y < h:
 			pixels[p.x,p.y] = (255, 255, 255) # Set the colour accordingly
 	return img
+	
+# translate points to origin and return
+# overall width and height
+def clean_dim(points):
+	mx = 10000
+	my = 10000
+	ax = 0
+	ay = 0
+	for p in points:
+		mx = min(p.x,mx)
+		my = min(p.y,my)
+	for p in points:
+		p.x -= mx
+		p.y -= my
+		ay = max(p.y,ay)
+		ax = max(p.x,ax)
+	return ax, ay
 
 # alignment occurs when all characters are less than 10 pixels tall
 def guess_jump(t, points):
@@ -231,9 +248,8 @@ if __name__ == "__main__":
 			jump_t = i
 			break
 	
-	for point in points:
-		point.set_time(jump_t)
+	w,h = clean_dim(points)
 	
-	draw_sky(250,140,points)
+	draw_sky(w+2,h+2,points)
 	print jump_t
-	img_sky(250,140,points).show()
+	img_sky(w+2,h+2,points).show()
