@@ -102,9 +102,9 @@ if __name__ == "__main__":
 	elves = []
 	scores = []
 
-	line = "3 7"
-	line = list(line.strip().split(" "))
-	goal_str =  "077201"
+	line = "37"
+	line = line.strip()
+	goal_str = "077201"
 	for i in range(2):
 		elves.append(Elf(i, int(line[i])))
 	
@@ -112,11 +112,12 @@ if __name__ == "__main__":
 	while True:
 		comb = list(str(sum(x.current for x in elves)))
 		for item in comb:
-			scores.append(item)
+			scores += item
 		for elf in elves:
 			elf.idx = (1 + elf.current + elf.idx) % len(scores)
 			elf.current = int(scores[elf.idx])
-		if goal_str in ''.join(scores[-len(goal_str):]):
-			term = len(scores) - len(goal_str)
+		if goal_str in scores[-len(goal_str)*2:]:
+			offset = scores[-len(goal_str)*2:].index(goal_str)
+			term = len(scores) - len(goal_str)*2 + offset
 			print term
 			break
