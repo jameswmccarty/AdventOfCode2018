@@ -503,7 +503,7 @@ if __name__ == "__main__":
 
 	# Part 1 Solution
 			
-	with open("day15_input, "r") as infile:
+	with open("day15_input", "r") as infile:
 		row_idx = 0
 		for line in infile.readlines():
 			line = list(line.strip())
