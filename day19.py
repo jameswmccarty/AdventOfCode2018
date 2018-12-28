@@ -1,5 +1,7 @@
 #!/usr/bin/python
 
+import math
+
 """
 --- Day 19: Go With The Flow ---
 
@@ -52,6 +54,94 @@ What value is left in register 0 when the background process halts?
 A new background process immediately spins up in its place. It appears identical, but on closer inspection, you notice that this time, register 0 started with the value 1.
 
 What value is left in register 0 when this new background process halts?
+
+--- PROGRAM ---
+
+#ip 4 ; Register #4 is IP
+00 addi 4 16 4 ; jump to line 17
+01 seti 1 4 3  ; R3 = 1
+02 seti 1 3 5  ; R5 = 1
+03 mulr 3 5 1  ; R1 = R3 * R5
+04 eqrr 1 2 1  ; If R2 = R1, then R1=1, else R1=0
+05 addr 1 4 4  ; R4 = R4 + R1 
+06 addi 4 1 4  ; R4 = R1 + R4 ' Skipped if R2=R1
+07 addr 3 0 0  ; R0 = R3 + R0 
+08 addi 5 1 5  ; R5 = R5 + 1
+09 gtrr 5 2 1  ; If R5 > R2, R1=1, else R1 = 0
+10 addr 4 1 4  ; R4 = R1 + R4 
+11 seti 2 9 4  ; R4 = 2 ' Skipped if R5 > R2
+12 addi 3 1 3  ; R3 = R3 + 1
+13 gtrr 3 2 1  ; If R3 > R2, R1 = 1, else R1 = 0
+14 addr 1 4 4  ; R4 = R4 + R1
+15 seti 1 6 4  ; R4 = 1 ' Skipped if R3 > R2
+16 mulr 4 4 4  ; R4 = R4 * R4
+17 addi 2 2 2  ; R2 = R2 + 2
+18 mulr 2 2 2  ; R2 = R2 * R2
+19 mulr 4 2 2  ; R2 = R4 * R2
+20 muli 2 11 2 ; R2 = R2 * 11
+21 addi 1 2 1  ; R1 = R1 + 2
+22 mulr 1 4 1  ; R1 = R4 * R1
+23 addi 1 7 1  ; R1 = R1 + 7
+24 addr 2 1 2  ; R2 = R1 + R2
+25 addr 4 0 4  ; R4 = R0 + R4 '1 is stored in R0 --> Skips to line 27
+26 seti 0 8 4  ; R4 = 0 ' returns to program start if R0 = 0
+27 setr 4 3 1  ; R1 = R4
+28 mulr 1 4 1  ; R1 = R4 * R1
+29 addr 4 1 1  ; R1 = R4 + R1
+30 mulr 4 1 1  ; R1 = R4 * R1
+31 muli 1 14 1 ; R1 = R1 * 14
+32 mulr 1 4 1  ; R1 = R4 * R1
+33 addr 2 1 2  ; R2 = R1 + R2
+34 seti 0 3 0  ; R0 = 0 ' if we get here, orig exec pathway...
+35 seti 0 6 4  ; R4 = 0 -- Jump to line 0 (line 1 after IP+)
+
+ ----- PROGRAM TRACE ----
+ 
+Line:  0  ['addi', '4', '16', '4'] [1, 0, 0, 0, 0, 0] ; jump to line 17
+Line:  17 ['addi', '2', '2', '2'] [1, 0, 0, 0, 17, 0]
+Line:  18 ['mulr', '2', '2', '2'] [1, 0, 2, 0, 18, 0]
+Line:  19 ['mulr', '4', '2', '2'] [1, 0, 4, 0, 19, 0]
+Line:  20 ['muli', '2', '11', '2'] [1, 0, 76, 0, 20, 0]
+Line:  21 ['addi', '1', '2', '1'] [1, 0, 836, 0, 21, 0]
+Line:  22 ['mulr', '1', '4', '1'] [1, 2, 836, 0, 22, 0]
+Line:  23 ['addi', '1', '7', '1'] [1, 44, 836, 0, 23, 0]
+Line:  24 ['addr', '2', '1', '2'] [1, 51, 836, 0, 24, 0]
+Line:  25 ['addr', '4', '0', '4'] [1, 51, 887, 0, 25, 0]
+Line:  27 ['setr', '4', '3', '1'] [1, 51, 887, 0, 27, 0]
+Line:  28 ['mulr', '1', '4', '1'] [1, 27, 887, 0, 28, 0]
+Line:  29 ['addr', '4', '1', '1'] [1, 756, 887, 0, 29, 0]
+Line:  30 ['mulr', '4', '1', '1'] [1, 785, 887, 0, 30, 0]
+Line:  31 ['muli', '1', '14', '1'] [1, 23550, 887, 0, 31, 0]
+Line:  32 ['mulr', '1', '4', '1'] [1, 329700, 887, 0, 32, 0]
+Line:  33 ['addr', '2', '1', '2'] [1, 10550400, 887, 0, 33, 0]
+Line:  34 ['seti', '0', '3', '0'] [1, 10550400, 10551287, 0, 34, 0]
+Line:  35 ['seti', '0', '6', '4'] [0, 10550400, 10551287, 0, 35, 0]
+Line:  1 ['seti', '1', '4', '3'] [0, 10550400, 10551287, 0, 1, 0]
+Line:  2 ['seti', '1', '3', '5'] [0, 10550400, 10551287, 1, 2, 0]
+Line:  3 ['mulr', '3', '5', '1'] [0, 10550400, 10551287, 1, 3, 1]
+Line:  4 ['eqrr', '1', '2', '1'] [0, 1, 10551287, 1, 4, 1] ; reg 1 and reg 2 are equal?
+Line:  5 ['addr', '1', '4', '4'] [0, 0, 10551287, 1, 5, 1] ; add regs 1 and 4, stor 4
+Line:  6 ['addi', '4', '1', '4'] [0, 0, 10551287, 1, 6, 1] ; increment reg 4 (skip inst)
+Line:  8 ['addi', '5', '1', '5'] [0, 0, 10551287, 1, 8, 1] ; store 1 in reg 5
+Line:  9 ['gtrr', '5', '2', '1'] [0, 0, 10551287, 1, 9, 2] ; check if reg 5 > reg 2
+Line:  10 ['addr', '4', '1', '4'] [0, 0, 10551287, 1, 10, 2] ; add reg 4 to reg 1 | if reg 5 is > reg 2, we'll jump to line 12 on next inst
+Line:  11 ['seti', '2', '9', '4'] [0, 0, 10551287, 1, 11, 2] ; jump back to line #3 (if above not met)
+Line:  3 ['mulr', '3', '5', '1'] [0, 0, 10551287, 1, 3, 2]   ; multiply reg 3 by reg 5, stor 1
+Line:  4 ['eqrr', '1', '2', '1'] [0, 2, 10551287, 1, 4, 2]
+Line:  5 ['addr', '1', '4', '4'] [0, 0, 10551287, 1, 5, 2]
+Line:  6 ['addi', '4', '1', '4'] [0, 0, 10551287, 1, 6, 2]
+Line:  8 ['addi', '5', '1', '5'] [0, 0, 10551287, 1, 8, 2]
+Line:  9 ['gtrr', '5', '2', '1'] [0, 0, 10551287, 1, 9, 3]
+Line:  10 ['addr', '4', '1', '4'] [0, 0, 10551287, 1, 10, 3]
+Line:  11 ['seti', '2', '9', '4'] [0, 0, 10551287, 1, 11, 3]
+Line:  3 ['mulr', '3', '5', '1'] [0, 0, 10551287, 1, 3, 3]
+Line:  4 ['eqrr', '1', '2', '1'] [0, 3, 10551287, 1, 4, 3]
+Line:  5 ['addr', '1', '4', '4'] [0, 0, 10551287, 1, 5, 3]
+Line:  6 ['addi', '4', '1', '4'] [0, 0, 10551287, 1, 6, 3]
+Line:  8 ['addi', '5', '1', '5'] [0, 0, 10551287, 1, 8, 3]
+Line:  9 ['gtrr', '5', '2', '1'] [0, 0, 10551287, 1, 9, 4]
+Line:  10 ['addr', '4', '1', '4'] [0, 0, 10551287, 1, 10, 4]
+Line:  11 ['seti', '2', '9', '4'] [0, 0, 10551287, 1, 11, 4]
 
 """
 
@@ -193,5 +283,46 @@ if __name__ == "__main__":
 		ip += 1
 		#print regs_dump()
 	print regs_dump()[0]
+	
+	# Part 2 Solution
+	
+	"""
+	program = []
+	
+	with open("day19_input", "r") as infile:
+		for line in infile.readlines():
+			program.append(line.strip().split(" "))
+			
+	ip_line = ''.join(program.pop(0))
+	ip_line = ip_line.replace("#ip", '').strip() # ip_line contains IP register number
+	
+	reset()
+	
+	regs["0"] = 1
+	
+	ip = 0
+	while ip < len(program) and ip > -1:
+		regs[ip_line] = ip
+		print "Line: ", ip, program[ip], regs_dump()
+		op[program[ip][0]](program[ip][1],program[ip][2],program[ip][3])
+		ip = regs[ip_line]
+		ip += 1
+		#print regs_dump()
+	print regs_dump()[0]
+	"""
+	
+	"""
+	R0 will contain a sum of numbers that are factors of the value in R2 (10551287)
+	"""
+	
+	target_val = 10551287
+	sum_factors = 0
+	for i in range(1,target_val):
+		if target_val % i == 0:
+			sum_factors += i
+	print sum_factors + target_val
+	
+	
+	
 	
 	
