@@ -153,6 +153,7 @@ doors1 = set()
 doors2 = set()
 final_map = dict()
 map_dims = None
+struct_map = []
 
 def explore(start, re):
 
@@ -265,7 +266,50 @@ def print_map():
 			if (j,i) in final_map:
 				out[j] = final_map[(j,i)]
 		print ''.join(out)
-			
+
+def structure_map():
+	maxx, maxy = map_dims
+	maxx += 2
+	maxy += 2
+	for i in range(maxy):
+		out = ['#'] * maxx
+		for j in range(maxx):
+			if (j,i) in final_map:
+				out[j] = final_map[(j,i)]
+		struct_map.append(out)
+
+def exclude_rooms(radius):
+
+	queue = []
+	seen = set()
+	for i, row in enumerate(struct_map):
+		for j, col in enumerate(row):
+			if col == 'X':
+				center = (i,j)
+	queue.append((center, 0))
+	
+	while len(queue) != 0:
+		pos, steps = queue.pop(0)
+		x, y = pos
+		seen.add(pos)
+		if steps < 1000:
+			struct_map[x][y] = 'X'
+		if struct_map[x-1][y] == '-' and struct_map[x-2][y] == '.' and (x-2,y) not in seen:
+			queue.append(((x-2,y), steps+1))
+		if struct_map[x+1][y] == '-' and struct_map[x+2][y] == '.' and (x+2,y) not in seen: 
+			queue.append(((x+2,y), steps+1))
+		if struct_map[x][y+1] == '|' and struct_map[x][y+2] == '.' and (x,y+2) not in seen:
+			queue.append(((x,y+2), steps+1))		
+		if struct_map[x][y-1] == '|' and struct_map[x][y-2] == '.'and (x,y-2) not in seen:
+			queue.append(((x,y-2), steps+1))			
+		
+
+def score_map():
+	rooms = 0
+	for row in struct_map:
+		rooms += row.count('.')
+	return rooms
+
 if __name__ == "__main__":
 
 	# Part 1 Solution
@@ -281,3 +325,9 @@ if __name__ == "__main__":
 	print explore((0,0), route) # 3721 per input
 	index_map()
 	print_map()
+	
+	# Part 2 Solution
+
+	structure_map()
+	exclude_rooms(1000)
+	print score_map()
