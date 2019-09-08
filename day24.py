@@ -362,7 +362,7 @@ class Group:
 
 	def attack(self, opponent):
 		if self.active:
-			print self.damageEstimate(opponent), min(self.damageEstimate(opponent) / opponent.hp, opponent.num_units)
+			#print self.damageEstimate(opponent), min(self.damageEstimate(opponent) / opponent.hp, opponent.num_units)
 			opponent.takeDamage(self.damageEstimate(opponent))		
 
 class Army:
@@ -384,7 +384,7 @@ class Army:
 				availTargets.append(i)
 		for group in self.groups:
 			group.target = None
-			high = (0, 0, 0)
+			high = (0, 0, -1)
 			highidx = None
 			for idx in availTargets:
 				damage = group.damageEstimate(opponentArmy.groups[idx])
@@ -396,7 +396,7 @@ class Army:
 						high = (damage, opponentArmy.groups[idx].getEffectivePower(), opponentArmy.groups[idx].getInitiative())
 						highidx = idx
 					elif opponentArmy.groups[idx].getEffectivePower() == high[1]:
-						if opponentArmy.groups[idx].getInitiative() > high[2]:
+						if opponentArmy.groups[idx].getInitiative() < high[2]:
 							high = (damage, opponentArmy.groups[idx].getEffectivePower(), opponentArmy.groups[idx].getInitiative())
 							highidx = idx
 			if highidx != None:
@@ -412,7 +412,7 @@ class Army:
 			print "  Effective power is: ", group.getEffectivePower(), "Attack type: ", group.damage
 			print "  Weak: ", group.weak, "Immune: ", group.immune, "Initiative: ", group.initiative
 
-def parse(line, target_army):
+def parse(line, target_army, boost=0):
 	weak_immune = ''
 	weak = ''
 	immune = ''
@@ -435,7 +435,7 @@ def parse(line, target_army):
 	outer = outer.split(" ")
 	num = int(outer[0])
 	hp  = int(outer[4])
-	damage  = int(outer[12])
+	damage  = int(outer[12])+boost
 	attack = outer[13]
 	initiative = int(outer[-1])
 
@@ -463,8 +463,8 @@ if __name__ == "__main__":
 
 	while not endgame:
 
-		for army in armies:
-			army.printGroups()
+		#for army in armies:
+		#	army.printGroups()
 
 		endgame = False
 		for army in armies:
@@ -492,13 +492,93 @@ if __name__ == "__main__":
 				attack_order.append( (group.getInitiative(), 2, i+1, group.target) )
 		
 		attack_order.sort(reverse=True)
-		print attack_order
+		#print attack_order
 		for entry in attack_order:
 			initiative, army_idx, group_idx, targetID = entry
 			if targetID != None:
 				armies[army_idx-1].groups[group_idx-1].attack(armies[(army_idx%2)].groups[targetID])
 
 	print armies[0].unitCount() + armies[1].unitCount()
+
+	# Part 2 Solution
+	# 3959 too high
+
+	global_boost = -1
+	enemywon  = True
+	
+	while enemywon:
+
+		round_boost = global_boost + 1
+		global_boost += 1
+
+		armies = []
+
+		#print "Round Boost: ", round_boost
+
+		with open('day24_input', 'r') as infile:
+			for line in infile.readlines():
+				if ':' in line:
+					current_army = Army()
+				elif len(line.strip()) == 0:
+					armies.append(current_army)
+					round_boost = 0
+				else:
+					parse(line.strip(), current_army, round_boost)
+			armies.append(current_army)
+
+		endgame = False
+
+		while not endgame:
+
+			#for army in armies:
+			#	army.printGroups()
+
+			endgame = False
+			for army in armies:
+				if army.unitCount() == 0:
+					endgame = True
+					break
+			if endgame:
+				break
+
+			# Stalemate detection
+			start_units = (armies[0].unitCount() + armies[1].unitCount())
+
+			# Target Selection
+
+			armies[0].battleOrder()
+			armies[1].battleOrder()
+			armies[0].targetSelect(armies[1])
+			armies[1].targetSelect(armies[0])
+
+			# Attack Stage
+
+			attack_order = []
+			for i, group in enumerate(armies[0].groups):
+				if group.active:
+					attack_order.append( (group.getInitiative(), 1, i+1, group.target) )
+			for i, group in enumerate(armies[1].groups):
+				if group.active:
+					attack_order.append( (group.getInitiative(), 2, i+1, group.target) )
+			
+			attack_order.sort(reverse=True)
+			#print attack_order
+			for entry in attack_order:
+				initiative, army_idx, group_idx, targetID = entry
+				if targetID != None:
+					armies[army_idx-1].groups[group_idx-1].attack(armies[(army_idx%2)].groups[targetID])
+
+			if start_units == (armies[0].unitCount() + armies[1].unitCount()):
+				endgame = True
+
+		if (armies[1].unitCount() > 0):
+			enemywon = True
+		else:
+			enemywon = False
+
+	print armies[0].unitCount()
+
+	
 	
 
 	
